@@ -1,32 +1,58 @@
-Cyberboss + Everything 全盘秒搜文件
-=====================================
+Cyberboss + Everything MCP — 全盘秒搜文件
+===========================================
 
-全程手机操作，不碰电脑。一次发送，永久生效。
-
-
-使用方法（3 分钟）：
-
-1. 打开"发给cyberboss.txt"，全选复制
-
-2. 在微信里粘贴发给 cyberboss
-
-3. 看到 Bash 审批弹窗就点 /yes（2-3 次）
-
-4. 验证：发一句"帮我找个文件"，看它是否一步步问你
-
-5. 验证通过后发 /reread，确保搜索流程永久保留在 instructions 里
-
-完成。之后在微信里说"搜文件"或"找东西"，cyberboss 会按流程
-一步步问你：文件类型 → 关键词 → 模糊搜索 → 选文件 → 发给你。
+把 Everything 引擎封装为 MCP (Model Context Protocol) 服务器，
+LLM 直接调用工具，接收干净 JSON，不再需要手动教流程。
+稳定、省 token、不挑模型。
 
 
-Everything 毫秒级全盘搜索，支持模糊匹配，记不清名字也能找。
+前置条件
+--------
 
-没装 Everything？cyberboss 会提示你先去
-https://www.voidtools.com/ 下载安装。
+1. 安装 Everything：https://www.voidtools.com/
+2. 下载 es.exe（Everything 命令行工具）放到 Everything 目录
+3. Node.js >= 22
 
 
-分享方式：
+部署（3 步）
+-----------
 
-把"发给cyberboss.txt"的内容直接贴到微信 / Telegram / Discord。
-或者把整个文件夹打包发过去。
+1. 把 everything-mcp.js 放到项目目录
+
+2. 在 .mcp.json 里注册：
+
+   "es": {
+     "command": "node",
+     "args": ["项目路径/everything-mcp.js"]
+   }
+
+3. 重启 Claude Code / cyberboss 桥接
+
+
+工具一览
+--------
+
+search — 全盘搜索文件
+  keyword     (必填) 关键词，不区分大小写，支持部分匹配
+  type        (可选) excel / word / pdf / image / ppt / text / video / audio
+  path        (可选) 限定目录
+  fuzzy       (可选) 模糊搜索，用通配符匹配
+  max_results (可选) 最大返回数，默认 20，上限 50
+  sort        (可选) date 按修改时间降序 / name 按文件名
+
+count  — 快速统计匹配数量，不返回列表
+
+
+为什么用 MCP 而不是写 instructions
+----------------------------------
+
+- LLM 直接调工具，不用在对话里手把手教搜索流程
+- 返回结构化 JSON，LLM 不需要解析 es.exe 原始输出
+- 工具描述自文档化，换模型不需要重新教
+- 每次调用只消耗工具定义 + 结果 JSON，省 token
+- Windows / WSL 路径问题由 MCP 内部处理，LLM 无感
+
+
+如 es.exe 不在 E:/Everything/，设置环境变量：
+
+  EVERYTHING_ES_PATH=C:/你的路径/es.exe
