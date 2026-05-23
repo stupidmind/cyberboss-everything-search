@@ -75,7 +75,7 @@ function runEs(args) {
     execFile(ES_EXE, args, {
       timeout: EXEC_TIMEOUT_MS,
       windowsHide: true,
-      encoding: "utf8",
+      encoding: "buffer",
     }, (err, stdout, stderr) => {
       if (err && err.killed) {
         return reject(new Error("es.exe timed out"));
@@ -83,9 +83,20 @@ function runEs(args) {
       if (err && !stdout) {
         return reject(new Error(err.message || String(err)));
       }
-      resolve({ stdout: stdout || "", stderr: stderr || "" });
+      const stdoutStr = decodeWindowsOutput(stdout);
+      const stderrStr = decodeWindowsOutput(stderr);
+      resolve({ stdout: stdoutStr, stderr: stderrStr });
     });
   });
+}
+
+function decodeWindowsOutput(buf) {
+  if (!buf || buf.length === 0) return "";
+  try {
+    return new TextDecoder("gbk", { fatal: false }).decode(buf);
+  } catch {
+    return Buffer.from(buf).toString("utf8");
+  }
 }
 
 function parseSearchResults(stdout) {
